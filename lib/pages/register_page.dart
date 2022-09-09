@@ -35,16 +35,22 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future signUp() async {
-    if (passwordConfirmed()) {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      addUserDetails(
-        _firstNameController.text.trim(),
-        _lastNameController.text.trim(),
-        _emailController.text.trim(),
-        int.parse(_ageController.text.trim()),
+    try {
+      if (passwordConfirmed()) {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+        addUserDetails(
+          _firstNameController.text.trim(),
+          _lastNameController.text.trim(),
+          _emailController.text.trim(),
+          int.parse(_ageController.text.trim()),
+        );
+      }
+    } on FirebaseAuthException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("There was an error signing up")),
       );
     }
   }
@@ -56,6 +62,7 @@ class _RegisterPageState extends State<RegisterPage> {
       'last name': lastName,
       'email': email,
       'age': age,
+      "groups_in": []
     });
   }
 

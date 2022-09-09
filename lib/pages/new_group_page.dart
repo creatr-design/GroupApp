@@ -13,6 +13,8 @@ class NewGroupPage extends StatefulWidget {
 }
 
 class _NewGroupPageState extends State<NewGroupPage> {
+  // work on loading later
+  bool isLoading = false;
   final _formKey = GlobalKey<FormState>();
   OutlineInputBorder enableBorder = OutlineInputBorder(
     borderSide: const BorderSide(color: Colors.white),
@@ -30,19 +32,31 @@ class _NewGroupPageState extends State<NewGroupPage> {
   TextEditingController groupNameController = TextEditingController();
   TextEditingController totalPeopleController = TextEditingController();
   TextEditingController peoplerPerGroupController = TextEditingController();
-
+  final groupCollectionRef = FirebaseFirestore.instance.collection('groups');
   Future<void> createNewGroup() async {
+    final int totalGroups = int.parse(totalPeopleController.text) ~/
+        int.parse(peoplerPerGroupController.text);
     try {
-      FirebaseFirestore.instance.collection('groups').add({
+      groupCollectionRef.add({
         "group_name": groupNameController.text,
         "division": int.parse(peoplerPerGroupController.text),
         "max_count": int.parse(totalPeopleController.text),
-        "sub_groups": [],
-      }).whenComplete(
-        () => Navigator.of(context).pushReplacement(
+        "members": [],
+      }).then((value) {
+        List.generate(
+          totalGroups,
+          (index) {
+            FirebaseFirestore.instance.collection('sub_groups').add({
+              "parent_id": value.id,
+              "members": [],
+            });
+          },
+        );
+
+        Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MyHomeWidget()),
-        ),
-      );
+        );
+      });
     } on FirebaseAuthException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -86,7 +100,7 @@ class _NewGroupPageState extends State<NewGroupPage> {
                     enabledBorder: enableBorder,
                     focusedBorder: focusBorder,
                     errorBorder: errorBorder,
-                    hintText: "Group Name",
+                    hintText: "Course Name",
                     fillColor: Colors.grey[200],
                     filled: true,
                   ),
@@ -108,7 +122,7 @@ class _NewGroupPageState extends State<NewGroupPage> {
                       enabledBorder: enableBorder,
                       focusedBorder: focusBorder,
                       errorBorder: errorBorder,
-                      hintText: "total Number of people",
+                      hintText: "Class Size",
                       fillColor: Colors.grey[200],
                       filled: true,
                     ),
@@ -129,7 +143,7 @@ class _NewGroupPageState extends State<NewGroupPage> {
                     enabledBorder: enableBorder,
                     focusedBorder: focusBorder,
                     errorBorder: errorBorder,
-                    hintText: "People per group",
+                    hintText: "Group Size",
                     fillColor: Colors.grey[200],
                     filled: true,
                   ),
@@ -141,6 +155,10 @@ class _NewGroupPageState extends State<NewGroupPage> {
                             int.parse(peoplerPerGroupController.text) >
                         int.parse(peoplerPerGroupController.text)) {
                       return 'Invalid peopler per group division';
+                    }
+                    if (int.parse(peoplerPerGroupController.text) >
+                        (int.parse(totalPeopleController.text) / 2)) {
+                      return "Group size can't be greater than half the class";
                     }
                     return null;
                   },
