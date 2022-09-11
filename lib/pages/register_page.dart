@@ -22,6 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _ageController = TextEditingController();
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -35,6 +36,9 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future signUp() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       if (passwordConfirmed()) {
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -52,6 +56,9 @@ class _RegisterPageState extends State<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("There was an error signing up")),
       );
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -180,6 +187,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: TextField(
                     controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.white),
@@ -246,28 +254,27 @@ class _RegisterPageState extends State<RegisterPage> {
                 SizedBox(height: 10),
 
                 //Sign up button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: GestureDetector(
-                    onTap: signUp,
-                    child: Container(
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Sign Up',
+                ElevatedButton(
+                  onPressed: signUp,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 25.0),
+                    primary: Theme.of(context).primaryColor,
+                    minimumSize:
+                        Size(MediaQuery.of(context).size.width * 0.9, 50),
+                    onPrimary: Colors.white,
+                  ),
+                  child: isLoading
+                      ? CircularProgressIndicator.adaptive(
+                          valueColor: AlwaysStoppedAnimation(
+                            Colors.white,
+                          ),
+                        )
+                      : Text(
+                          "Sign Up",
                           style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: 20,
                           ),
                         ),
-                      ),
-                    ),
-                  ),
                 ),
                 SizedBox(height: 10),
 
